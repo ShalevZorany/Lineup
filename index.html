@@ -5,45 +5,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Line-Up Builder</title>
 <style>
- body{font-family:Arial,Helvetica,sans-serif;text-align:center;margin:0}
- #controls{margin:1rem auto;max-width:600px;display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center}
- select,button{padding:.35rem .7rem;font-size:1rem}
- /*—  מגרש —*/
- #field{
-   width:min(70vw,450px);   /* מצטמצם במסכים קטנים */
-   aspect-ratio:2/3;        /* 68×105 מטר ≈ 2:3 */
-   position:relative;
-   margin:1rem auto;
-   border:4px solid #fff;
-   border-radius:8px;
-   background:#32853d;
-   background:repeating-linear-gradient(90deg,#308534 0 5%,#2e7d32 5% 10%); /* פסים כמו דשא אירופי */
- }
- /* קו אמצע ואופקי */
- #field::before,#field::after{content:"";position:absolute;left:50%;transform:translateX(-50%);background:#fff;pointer-events:none}
- #field::before{width:2px;height:100%}
- #field::after{top:50%;width:100%;height:2px}
- /* אלמנט קווי מגרש נוספים */
- .pitch-lines{position:absolute;inset:0;pointer-events:none}
- .center-circle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:30%;aspect-ratio:1/1;border:2px solid #fff;border-radius:50%}
- .penalty-box{position:absolute;top:50%;transform:translateY(-50%);width:18%;height:30%;border:2px solid #fff}
- .penalty-box.left{left:0;border-right:none}
- .penalty-box.right{right:0;border-left:none}
- .goal-box{position:absolute;top:50%;transform:translateY(-50%);width:6%;height:12%;border:2px solid #fff}
- .goal-box.left{left:0;border-right:none}
- .goal-box.right{right:0;border-left:none}
- .penalty-spot{position:absolute;width:6px;height:6px;background:#fff;border-radius:50%}
- .penalty-spot.left{left:12%;top:50%;transform:translateY(-50%)}
- .penalty-spot.right{right:12%;top:50%;transform:translateY(-50%)}
- /* שחקן */
- .player{position:absolute;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.85);border:2px solid #000;cursor:grab;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:bold;user-select:none;touch-action:none}
- .player span.number{font-size:1.25rem;line-height:1}
- .player span.name{font-size:.72rem}
+/* —— בסיס —— */
+body{margin:0;font-family:Arial,Helvetica,sans-serif;text-align:center}
+h1{margin-top:1rem}
+#controls{margin:.8rem auto;max-width:600px;display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center}
+select,button{padding:.35rem .75rem;font-size:1rem}
+
+/* —— מגרש (פרופורציות רשמיות 105×68) —— */
+#field{
+  width:min(80vw,500px);              /* כווץ במסכים צרים */
+  aspect-ratio:68/105;                /* מקבע יחס 0.6476 */
+  position:relative;
+  margin:0 auto 1.5rem;
+  background:#2f8e3d;                 /* ירוק בסיס */
+  background:repeating-linear-gradient(90deg,#2f8e3d 0 5%,#2a8137 5% 10%); /* פסים כל 5% */
+  border:2px solid #fff;              /* קווי חוץ */
+  box-sizing:border-box;
+  user-select:none;
+}
+
+/* אלמנטים קבועים במגרש */
+.pitch-lines{position:absolute;inset:0;pointer-events:none}
+.center-line{position:absolute;top:0;left:50%;transform:translateX(-50%);width:2px;height:100%;background:#fff}
+.center-circle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:27%;aspect-ratio:1/1;border:2px solid #fff;border-radius:50%}
+
+/* — רחבת ה-16 (Penalty Area) — */
+.penalty-area{position:absolute;width:59.3%;left:20.35%;height:15.7%;border:2px solid #fff}
+.penalty-area.top{top:0;border-top:none}
+.penalty-area.bottom{bottom:0;border-bottom:none}
+
+/* — רחבת ה-5 (Goal Area) — */
+.goal-area{position:absolute;width:26.94%;left:36.53%;height:5.24%;border:2px solid #fff}
+.goal-area.top{top:0;border-top:none}
+.goal-area.bottom{bottom:0;border-bottom:none}
+
+/* — נקודת העונשין — */
+.penalty-spot{position:absolute;width:6px;height:6px;border-radius:50%;background:#fff}
+.penalty-spot.top{top:10.48%;left:50%;transform:translate(-50%,-50%)}
+.penalty-spot.bottom{bottom:10.48%;left:50%;transform:translate(-50%,50%)}
+
+/* —— עיצוב שחקן —— */
+.player{position:absolute;width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.85);border:1.8px solid #222;cursor:grab;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:bold;touch-action:none}
+.player span.number{font-size:1.2rem;line-height:1}
+.player span.name{font-size:.7rem}
 </style>
 </head>
 <body>
 <h1>Line-Up Builder</h1>
-
 <div id="controls">
   <label>Formation:
     <select id="formationSelect">
@@ -57,16 +65,17 @@
   <button id="resetBtn">Reset Positions</button>
 </div>
 
-<!-- המגרש -->
+<!--  מגרש  -->
 <div id="field">
   <div class="pitch-lines">
+    <div class="center-line"></div>
     <div class="center-circle"></div>
-    <div class="penalty-box left"></div>
-    <div class="penalty-box right"></div>
-    <div class="goal-box left"></div>
-    <div class="goal-box right"></div>
-    <div class="penalty-spot left"></div>
-    <div class="penalty-spot right"></div>
+    <div class="penalty-area top"></div>
+    <div class="penalty-area bottom"></div>
+    <div class="goal-area top"></div>
+    <div class="goal-area bottom"></div>
+    <div class="penalty-spot top"></div>
+    <div class="penalty-spot bottom"></div>
   </div>
 </div>
 
@@ -116,30 +125,31 @@ function makeDraggable(el){
   el.addEventListener('pointerup',()=>dragging=false);
 }
 
+/* —— מערכים —— */
 const formations={
   "4-4-2":[
-    [50,95],
-    [15,75],[40,75],[60,75],[85,75],
-    [15,50],[40,50],[60,50],[85,50],
-    [35,25],[65,25]
+    [50,97],
+    [15,78],[50,78],[85,78],
+    [15,55],[37,55],[63,55],[85,55],
+    [30,30],[70,30]
   ],
   "4-3-3":[
-    [50,95],
-    [15,75],[40,75],[60,75],[85,75],
-    [25,55],[50,55],[75,55],
-    [15,30],[50,25],[85,30]
+    [50,97],
+    [15,78],[50,78],[85,78],
+    [25,57],[50,57],[75,57],
+    [15,34],[50,28],[85,34]
   ],
   "3-5-2":[
-    [50,95],
-    [25,75],[50,75],[75,75],
-    [10,55],[30,50],[50,45],[70,50],[90,55],
-    [35,25],[65,25]
+    [50,97],
+    [25,78],[50,78],[75,78],
+    [15,57],[35,52],[50,45],[65,52],[85,57],
+    [35,28],[65,28]
   ],
   "5-3-2":[
-    [50,95],
-    [10,75],[30,75],[50,75],[70,75],[90,75],
-    [25,50],[50,50],[75,50],
-    [35,25],[65,25]
+    [50,97],
+    [10,78],[30,78],[50,78],[70,78],[90,78],
+    [25,55],[50,55],[75,55],
+    [35,28],[65,28]
   ]
 };
 
@@ -151,9 +161,11 @@ function clearPlayers(){
   players.forEach(p=>p.remove());
   players=[];
 }
+
 formationSelect.onchange=()=>applyFormation(formationSelect.value);
 addPlayerBtn.onclick=()=>createPlayer(`P${players.length+1}`,players.length+1,50,50);
 resetBtn.onclick=()=>applyFormation(formationSelect.value);
+
 applyFormation(formationSelect.value);
 </script>
 </body>
