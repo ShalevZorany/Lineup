@@ -11,45 +11,30 @@ h1{margin-top:1rem}
 #controls{margin:.8rem auto;max-width:600px;display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center}
 select,button{padding:.35rem .75rem;font-size:1rem}
 
-/* ——— מגרש: 105 × 68 מ׳ ——— */
-#field{
-  width:min(80vw,500px);
-  aspect-ratio:68/105;          /* 0.6476 */
-  position:relative;
-  margin:0 auto 1.5rem;
-  background:#2f8e3d;
-  background:repeating-linear-gradient(90deg,#2f8e3d 0 5%,#2a8137 5% 10%);
-  border:2px solid #fff;        /* קווי חוץ */
-  box-sizing:border-box;
-  user-select:none;
-}
-
-/* ——— קווי המגרש ——— */
+/* ——— מגרש (68×105) ——— */
+#field{width:min(80vw,500px);aspect-ratio:68/105;position:relative;margin:0 auto 1.5rem;background:#2f8e3d;background:repeating-linear-gradient(90deg,#2f8e3d 0 5%,#2a8137 5% 10%);border:2px solid #fff;box-sizing:border-box;user-select:none}
 .pitch-lines{position:absolute;inset:0;pointer-events:none}
-.half-line{position:absolute;left:0;top:50%;width:100%;height:2px;background:#fff}
+.half-line{position:absolute;top:50%;left:0;width:100%;height:2px;background:#fff}
 .center-circle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:27%;aspect-ratio:1/1;border:2px solid #fff;border-radius:50%}
-
-/* רחבת 16 */
 .penalty-area{position:absolute;width:59.3%;left:20.35%;height:15.7%;border:2px solid #fff}
-.penalty-area.top{top:0;border-top:none}
-.penalty-area.bottom{bottom:0;border-bottom:none}
-/* רחבת 5 */
+.penalty-area.top{top:0;border-top:none}.penalty-area.bottom{bottom:0;border-bottom:none}
 .goal-area{position:absolute;width:26.94%;left:36.53%;height:5.24%;border:2px solid #fff}
-.goal-area.top{top:0;border-top:none}
-.goal-area.bottom{bottom:0;border-bottom:none}
-/* נקודת פנדל */
+.goal-area.top{top:0;border-top:none}.goal-area.bottom{bottom:0;border-bottom:none}
 .penalty-spot{position:absolute;width:6px;height:6px;border-radius:50%;background:#fff}
 .penalty-spot.top{top:10.48%;left:50%;transform:translate(-50%,-50%)}
 .penalty-spot.bottom{bottom:10.48%;left:50%;transform:translate(-50%,50%)}
 
-/* ——— שחקנים ——— */
-.player{position:absolute;width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.85);border:1.8px solid #222;cursor:grab;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:bold;touch-action:none}
-.player span.number{font-size:1.2rem;line-height:1}
-.player span.name{font-size:.7rem}
+/* ——— שחקן ——— */
+.player{position:absolute;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.9);border:1.8px solid #222;cursor:grab;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;touch-action:none}
+.player span{display:block;text-align:center;line-height:1}
+.player .fname{font-size:.95rem;font-weight:700}
+.player .lname{font-size:.9rem;font-weight:700}
+.player .pos{font-size:.68rem;font-weight:normal}
 </style>
 </head>
 <body>
 <h1>Line-Up Builder</h1>
+
 <div id="controls">
   <label>Formation:
     <select id="formationSelect">
@@ -83,25 +68,30 @@ const addPlayerBtn=document.getElementById('addPlayerBtn');
 const resetBtn=document.getElementById('resetBtn');
 let players=[];
 
-function createPlayer(name="Player",number=players.length+1,x=50,y=90){
+// ——— יצירת שחקן ———
+function createPlayer(first="שם",last="משפחה",pos="עמדה",x=50,y=90){
   const el=document.createElement('div');
   el.className='player';
   el.style.left=`${x}%`;
   el.style.top=`${y}%`;
-  el.innerHTML=`<span class="number">${number}</span><span class="name">${name}</span>`;
+  el.innerHTML=`<span class="fname">${first}</span><span class="lname">${last}</span><span class="pos">${pos}</span>`;
   field.appendChild(el);
   makeDraggable(el);
   el.ondblclick=()=>{
-    const newName=prompt("Player name:",name);
-    const newNumber=prompt("Player number:",number);
-    if(newName!==null) name=newName;
-    if(newNumber!==null) number=newNumber;
-    el.querySelector('.name').textContent=name;
-    el.querySelector('.number').textContent=number;
+    const newFirst=prompt("שם פרטי:",first);
+    const newLast=prompt("שם משפחה:",last);
+    const newPos=prompt("עמדה / תפקיד:",pos);
+    if(newFirst!==null) first=newFirst;
+    if(newLast!==null) last=newLast;
+    if(newPos!==null) pos=newPos;
+    el.querySelector('.fname').textContent=first;
+    el.querySelector('.lname').textContent=last;
+    el.querySelector('.pos').textContent=pos;
   };
   players.push(el);
 }
 
+// ——— גרירה ———
 function makeDraggable(el){
   let offsetX,offsetY,dragging=false;
   el.addEventListener('pointerdown',e=>{
@@ -122,45 +112,47 @@ function makeDraggable(el){
   el.addEventListener('pointerup',()=>dragging=false);
 }
 
-/* ——— מערכים ——— */
+// ——— מערכים ———
 const formations={
   "4-4-2":[
-    [50,97],                     // GK
-    [15,78],[35,78],[65,78],[85,78],           // 4 DF
-    [15,55],[37,55],[63,55],[85,55],           // 4 MF
-    [30,30],[70,30]                            // 2 FW
+    ["שוער","","GK",50,97],
+    ["מגן","שמאל","LB",15,78],["בלם","1","CB",35,78],["בלם","2","CB",65,78],["מגן","ימין","RB",85,78],
+    ["קשר","שמאל","LM",15,55],["קשר","אמצע","CM",37,55],["קשר","אמצע","CM",63,55],["קשר","ימין","RM",85,55],
+    ["חלוץ","1","ST",30,30],["חלוץ","2","ST",70,30]
   ],
+  // שאר המערכים — לדוגמה בלבד (אפשר לעדכן שמות כרצונך)
   "4-3-3":[
-    [50,97],
-    [15,78],[35,78],[65,78],[85,78],           // 4 DF
-    [25,57],[50,57],[75,57],                   // 3 MF
-    [15,34],[50,28],[85,34]                    // 3 FW
+    ["שוער","","GK",50,97],
+    ["מגן","שמאל","LB",15,78],["בלם","1","CB",35,78],["בלם","2","CB",65,78],["מגן","ימין","RB",85,78],
+    ["קשר","שמאל","CM",25,57],["קשר","אמצע","CM",50,57],["קשר","ימין","CM",75,57],
+    ["חלוץ","שמאל","LW",15,34],["חלוץ","אמצע","CF",50,28],["חלוץ","ימין","RW",85,34]
   ],
   "3-5-2":[
-    [50,97],
-    [25,78],[50,78],[75,78],                  // 3 DF
-    [15,57],[35,52],[50,45],[65,52],[85,57],  // 5 MF
-    [35,28],[65,28]                           // 2 FW
+    ["שוער","","GK",50,97],
+    ["בלם","שמאל","CB",25,78],["בלם","אמצע","CB",50,78],["בלם","ימין","CB",75,78],
+    ["כנף","שמאל","LM",15,57],["קשר","1","CM",35,52],["קשר","2","CM",50,45],["קשר","3","CM",65,52],["כנף","ימין","RM",85,57],
+    ["חלוץ","1","ST",35,28],["חלוץ","2","ST",65,28]
   ],
   "5-3-2":[
-    [50,97],
-    [10,78],[30,78],[50,78],[70,78],[90,78],  // 5 DF
-    [25,55],[50,55],[75,55],                  // 3 MF
-    [35,28],[65,28]                           // 2 FW
+    ["שוער","","GK",50,97],
+    ["כנף","שמאל","LWB",10,78],["בלם","1","CB",30,78],["בלם","2","CB",50,78],["בלם","3","CB",70,78],["כנף","ימין","RWB",90,78],
+    ["קשר","שמאל","CM",25,55],["קשר","אמצע","CM",50,55],["קשר","ימין","CM",75,55],
+    ["חלוץ","1","ST",35,28],["חלוץ","2","ST",65,28]
   ]
 };
 
 function applyFormation(name){
   clearPlayers();
-  formations[name].forEach((pos,i)=>createPlayer(`P${i+1}`,i+1,pos[0],pos[1]));
+  formations[name].forEach(arr=>createPlayer(...arr));
 }
 function clearPlayers(){
   players.forEach(p=>p.remove());
   players=[];
 }
 
+// ——— אירועים ———
 formationSelect.onchange=()=>applyFormation(formationSelect.value);
-addPlayerBtn.onclick=()=>createPlayer(`P${players.length+1}`,players.length+1,50,50);
+addPlayerBtn.onclick=()=>createPlayer("שם","משפחה","עמדה",50,50);
 resetBtn.onclick=()=>applyFormation(formationSelect.value);
 
 applyFormation(formationSelect.value);
